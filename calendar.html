@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <!-- Meta, title, CSS, favicons, etc. -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Calendar</title>
+
+    <!-- Bootstrap -->
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <!-- FullCalendar -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.8.2/fullcalendar.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.8.2/fullcalendar.print.css" rel="stylesheet" media="print">
+
+    <!-- Custom styling plus plugins -->
+    
+  </head>
+
+  <body class="nav-md">
+    <div class="container body">   
+        <div class="x_panel">                 
+		  <div class="x_content">
+			<div id='calendar'></div>
+		  </div>
+		</div>     
+      </div>
+    <script src="https://code.jquery.com/jquery-2.2.3.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.20.1/moment.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.8.2/fullcalendar.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.8.2/locale-all.js"></script>
+    <script>
+      $(window).load(function() {              
+		var agends = [];	
+		try {
+        request = new XMLHttpRequest();
+		} catch (trymicrosoft) {
+			try {
+				request = new ActiveXObject("MsXML2.XMLHTTP");
+			} catch (othermicrosoft) {
+				try {
+					request = new ActiveXObject("Microsoft.XMLHTTP");
+				} catch (failed) {
+					request = null;
+				}
+			}
+		}
+		if (request == null) {
+			alert("Error Creating Request");
+		}  
+		var acabou=false;
+		var pg =1;
+		while(acabou==false){
+			var url = "https://api.tomticket.com/chamados/20ecfb5bab2e6bc0bfb253621dc6699a/"+ pg + "?situacao=0,1,2,3,6,7,8,9&m=" + Math.random();
+			request.open("GET", url, false);
+			request.send(null);
+			var j = JSON.parse(request.responseText);
+			j=j["data"];
+			if (j.length>0){
+				for (i = 0; i < j.length; i++) {	
+					if(j[i]["status"]=="Agendado"){
+						try{
+							url = "https://api.tomticket.com/chamado/20ecfb5bab2e6bc0bfb253621dc6699a/"+ j[i]["idchamado"] + "?situacao=0,1,2,3,6,7,8,9&m=" + Math.random();
+							request.open("GET", url, false);
+							request.send(null);
+							var jd = JSON.parse(request.responseText);
+							jd=jd["data"];
+							var d,m,y,h,hh;							
+							d=jd["Data"].substr(0, 2);
+							m=jd["Data"].substr(3, 2);
+							y=jd["Data"].substr(6, 4);
+							h=jd["Hora"].substr(0, 2);
+							hh=jd["Hora"].substr(3, 2);							
+							var c;
+							switch(j[i]["departamento"]) {
+							case "ScanDesigner":
+								c="#555";
+								break;
+							case "ScanLite":
+								c="#505";
+								break;
+							case "Alfresco":
+								c="#055";
+								break;
+							case "FollowMe":
+								c="#550";
+								break;
+							case "Bilhetagem":
+								c="#050";
+								break;
+							default:
+								c="#123";
+							}							
+							agends.push({title: j[i]["titulo"], start: new Date(y, m-1, d, h, hh), url:"https://painel.tomticket.com/painel.html#/chamado/historico/" + j[i]["idchamado"], allDay: false,backgroundColor: c});
+						}
+						catch(e){
+						}
+					}
+				}
+			}
+			else{
+				acabou=true;
+			}
+			pg+=1;
+		}		
+        var calendar = $('#calendar').fullCalendar({
+		  height: 400,
+		  aspectRatio: 1.8,
+		  defaultView: "month",
+		  allDaySlot: false,
+		  locale: "pt-br",
+		  minTime: "8:00",
+		  weekends : false,
+		  weekMode: "liquid",
+		  maxTime: "18:00",
+		  forceEventDuration: true,
+		  defaultTimedEventDuration: '00:30:00',
+          header: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'month,agendaWeek,agendaDay'
+          },
+          events: agends
+        });
+      });
+    </script>
+  </body>
+</html>
